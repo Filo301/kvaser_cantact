@@ -8,6 +8,17 @@
 #include "filo_cmds.h"
 
 #define XCAN_CHANNEL_MAX (1)
+#define STM32F0_UID_BASE ((uint32_t*)0x1FFFF7AC)
+
+/* Make a human-friendly 6-digit decimal serial from UID.
+   Always in [100000..999999] to avoid leading zeros. */
+static uint32_t derive_serial_decimal(void)
+{
+    const uint32_t *uid = STM32F0_UID_BASE;          // uid[0], uid[1], uid[2]
+    uint32_t s = uid[0] ^ uid[1] ^ uid[2];           // fold 96b → 32b
+    return (s % 900000u) + 100000u;                  // 6 digits
+}
+
 
 static struct
 {
@@ -234,7 +245,7 @@ void xcan_handle_command( filoCmd *pcmd, int size )
 
        p_resp->transId = pcmd->getCardInfoReq.transId;
        p_resp->channelCount = 1;
-       p_resp->serialNumber = 666u;
+       p_resp->serialNumber = derive_serial_decimal();
        p_resp->padding1 = 0;
        p_resp->clockResolution = 0;
        p_resp->mfgDate = 1523452686u; /* unix time */
