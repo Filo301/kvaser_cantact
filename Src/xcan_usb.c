@@ -5,7 +5,6 @@
 #include "usbd_conf.h"
 #include "usbd_helper.h"
 #include "xcan_protocol.h"
-#include "xcan_led.h"
 #include "xcan_usb.h"
 
 static struct t_class_data xcan_data = { 0 };
@@ -166,27 +165,19 @@ static uint8_t device_data_in( USBD_HandleTypeDef *pdev, uint8_t epnum )
   if( pdev->pClassData == 0 )
     return USBD_FAIL;
   
-/* use ZLP */
-#if 0
+/* handle possible ZLP when packet is exact multiple of maxpacket */
   PCD_HandleTypeDef *hpcd = pdev->pData;
   uint32_t len = pdev->ep_in[epnum].total_length;
-  /* packet is multiple of maxpacket, so tell host what all transfer is done */
   if( len && ( len % hpcd->IN_ep[epnum].maxpacket ) == 0U )
   {
-    /* update the packet total length */
     pdev->ep_in[epnum].total_length = 0U;
-    /* send ZLP */
     USBD_LL_Transmit( pdev, epnum, NULL, 0U );
   }
   else
   {
-    /* tx done, no active transfer */
+    pdev->ep_in[epnum].total_length = 0U;
     p_data->ep_tx_in_use[epnum] = 0;
   }
-#else
-  pdev->ep_in[epnum].total_length = 0U;
-  p_data->ep_tx_in_use[epnum] = 0;
-#endif
   return USBD_OK;
 }
 

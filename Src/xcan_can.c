@@ -3,6 +3,7 @@
 #include <assert.h>
 #include "xcan_can.h"
 #include "xcan_timestamp.h"
+#include "led.h"
 
 #define CAN_TX_FIFO_SIZE (64)
 static CAN_HandleTypeDef g_hcan = { .Instance = CAN };
@@ -235,6 +236,7 @@ void xcan_can_set_bus_active( uint16_t mode )
     HAL_CAN_AbortTxRequest( &g_hcan, CAN_TX_MAILBOX0 | CAN_TX_MAILBOX1 | CAN_TX_MAILBOX2 );
     HAL_CAN_Stop( &g_hcan );
   }
+  leds_set_bus_active( mode != 0 );
 }
 
 static void xcan_can_rx_frame( CAN_HandleTypeDef *hcan, uint32_t fifo )
@@ -268,6 +270,8 @@ static void xcan_can_rx_frame( CAN_HandleTypeDef *hcan, uint32_t fifo )
     can_dev.rx_cb( &msg );
   }
 
+  led_rx_pulse();
+
   ++can_dev.rx_msgs;
 }
 
@@ -291,18 +295,24 @@ void HAL_CAN_TxMailbox0CompleteCallback( CAN_HandleTypeDef *hcan )
 {
   UNUSED( hcan );
   ++can_dev.tx_msgs;
+  led_tx_pulse();
+  xcan_can_flush_tx();
 }
 
 void HAL_CAN_TxMailbox1CompleteCallback( CAN_HandleTypeDef *hcan )
 {
   UNUSED( hcan );
   ++can_dev.tx_msgs;
+  led_tx_pulse();
+  xcan_can_flush_tx();
 }
 
 void HAL_CAN_TxMailbox2CompleteCallback( CAN_HandleTypeDef *hcan )
 {
   UNUSED( hcan );
   ++can_dev.tx_msgs;
+  led_tx_pulse();
+  xcan_can_flush_tx();
 }
 
 void HAL_CAN_RxFifo0FullCallback( CAN_HandleTypeDef *hcan )

@@ -31,7 +31,7 @@ Src/usbd_conf.c \
 Src/usbd_desc.c \
 Src/xcan_usb.c \
 Src/xcan_can.c \
-Src/xcan_led.c \
+Src/led.c \
 Src/xcan_protocol.c \
 Src/xcan_timestamp.c \
 Src/system_stm32f0xx.c \

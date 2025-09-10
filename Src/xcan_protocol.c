@@ -3,7 +3,6 @@
 #include <string.h>
 #include "xcan_can.h"
 #include "xcan_usb.h"
-#include "xcan_led.h"
 #include "xcan_timestamp.h"
 #include "filo_cmds.h"
 
@@ -119,7 +118,6 @@ static void xcan_rx_message( can_message_t *pmsg )
   p_resp->rawMessage[5] = pmsg->dlc&0x0F;
   memcpy( &p_resp->rawMessage[6], pmsg->data, 8 );
 
-  xcan_led_set_mode( LED1, LED_MODE_BLINK_FAST, 237 );
 }
 
 /* not real tx ok cb */
@@ -135,7 +133,6 @@ static void xcan_tx_message( can_message_t *msg )
   p_resp->transId = msg->dummy;
 
   xcan_timestamp_ticks_from_ts( p_resp->time, msg->timestamp );
-  xcan_led_set_mode( LED0, LED_MODE_BLINK_FAST, 237 );
 }
 
 static void xcan_can_error( uint8_t err, uint8_t rx_err, uint8_t tx_err )
@@ -566,39 +563,6 @@ void xcan_handle_command( filoCmd *pcmd, int size )
       p_resp->cmdNo = CMD_READ_CLOCK_RESP;
       p_resp->transId = pcmd->readClockReq.transId;
       xcan_timestamp_ticks( p_resp->time );
-    }
-    break;
-    case CMD_LED_ACTION_REQ:
-    {
-      cmdLedActionResp *p_resp = xcan_alloc_resp( sizeof( cmdLedActionResp ) );
-      if( !p_resp )
-        break;
-      /* TODO: dummy response */
-      p_resp->cmdLen = sizeof( cmdLedActionResp );
-      p_resp->cmdNo = CMD_LED_ACTION_RESP;
-      p_resp->transId = pcmd->ledActionReq.transId;
-      p_resp->subCmd = pcmd->ledActionReq.subCmd;
-
-      switch( p_resp->subCmd )
-      {
-        case LED_SUBCOMMAND_ALL_LEDS_OFF:
-        case LED_SUBCOMMAND_ALL_LEDS_ON:
-          xcan_led_set_mode( LED0, ( p_resp->subCmd == LED_SUBCOMMAND_ALL_LEDS_ON ) ? LED_MODE_ON:LED_MODE_OFF, 
-                                  pcmd->ledActionReq.timeout );
-          xcan_led_set_mode( LED1, ( p_resp->subCmd == LED_SUBCOMMAND_ALL_LEDS_ON ) ? LED_MODE_ON:LED_MODE_OFF, 
-                                  pcmd->ledActionReq.timeout );
-        break;
-        case LED_SUBCOMMAND_LED_0_ON:
-        case LED_SUBCOMMAND_LED_0_OFF:
-          xcan_led_set_mode( LED0, ( p_resp->subCmd == LED_SUBCOMMAND_LED_0_ON )?LED_MODE_ON:LED_MODE_OFF
-                    , pcmd->ledActionReq.timeout );
-        break;
-        case LED_SUBCOMMAND_LED_1_ON:
-        case LED_SUBCOMMAND_LED_1_OFF:
-          xcan_led_set_mode( LED1, ( p_resp->subCmd == LED_SUBCOMMAND_LED_1_ON )?LED_MODE_ON:LED_MODE_OFF
-                    , pcmd->ledActionReq.timeout );
-        break;
-      }
     }
     break;
     /* RX TX CAN QUEUE */
