@@ -1,6 +1,6 @@
 #include "stm32f0xx_hal.h"
 #include "xcan_timestamp.h"
-#include "xcan_led.h"
+#include "led.h"
 #include "xcan_protocol.h"
 #include "xcan_usb.h"
 
@@ -93,6 +93,7 @@ void SystemClock_Config(void)
 void SysTick_Handler( void )
 {
   HAL_IncTick();
+  leds_tick_1ms();
 }
 
 int main( void )
@@ -102,14 +103,13 @@ int main( void )
   SystemClock_Config();
   
   xcan_usb_init();
-  xcan_led_init();
+  leds_init();
   xcan_timestamp_init();
   xcan_protocol_init();
 
   for(;;)
   {
     xcan_usb_poll();
-    xcan_led_poll();
     xcan_protocol_poll();
   }
 }
